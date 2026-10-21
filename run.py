@@ -2,12 +2,17 @@ import os
 from app import create_app
 from app.extensions import db
 
-env = os.environ.get('FLASK_ENV', 'development')
+env = os.environ.get('FLASK_ENV', 'production' if (os.environ.get('VERCEL') or os.environ.get('VERCEL_ENV')) else 'development')
 app = create_app(env)
 
-if __name__ == '__main__':
-    with app.app_context():
+# Ensure database tables exist on cold start in serverless environment
+with app.app_context():
+    try:
         db.create_all()
+    except Exception:
+        pass
+
+if __name__ == '__main__':
     print("=" * 60)
     print(" CivicPulse — Smart City Issue Reporting & Resolution Platform")
     print(" Aligned with UN Sustainable Development Goal 11")
