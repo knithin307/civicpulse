@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% from 'components/status_badge.html' import render_status_badge, render_priority_badge %}
+
+{% block title %}Submit Resolution Proof — {{ issue.tracking_id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card card-civic shadow-sm">
+        <div class="card-header bg-white p-4 border-bottom">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-3 p-3 text-white bg-success">
+              <i class="bi bi-patch-check-fill fs-3"></i>
+            </div>
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-light text-navy border font-monospace">{{ issue.tracking_id }}</span>
+                {{ render_priority_badge(issue.priority) }}
+              </div>
+              <h4 class="fw-bold text-navy mb-0">Submit Resolution Proof & Close Ticket</h4>
+              <p class="text-muted small mb-0">Record field actions, corrective measures, and upload after-work photographic evidence.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Original Issue Snapshot -->
+          <div class="card bg-light border p-3 mb-4">
+            <h6 class="fw-bold text-navy mb-2"><i class="bi bi-info-circle text-teal me-1"></i>Reported Issue Summary</h6>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <div class="fw-bold text-navy">{{ issue.title }}</div>
+                <div class="text-muted small mb-2">{{ issue.description }}</div>
+                <div class="small text-muted"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ issue.address }}</div>
+                <div class="small text-muted"><i class="bi bi-clock me-1"></i>Reported: {{ issue.created_at|datetime_format }}</div>
+              </div>
+              <div class="col-md-4 text-center">
+                {% if issue.image_before %}
+                  <div class="evidence-preview-card">
+                    <div class="evidence-label evidence-label-before small">Before Photo</div>
+                    <img src="{{ url_for('static', filename=issue.image_before) }}" style="width: 100%; height: 120px; object-fit: cover;" alt="Before">
+                  </div>
+                {% else %}
+                  <div class="p-3 bg-white rounded border small text-muted">No photo uploaded by citizen</div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Resolution Form -->
+          <form method="POST" action="{{ url_for('officer.resolve_issue', issue_id=issue.id) }}" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="resolution_notes" class="form-label fw-semibold small">Work Performed / Resolution Remarks <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="resolution_notes" name="resolution_notes" rows="4" required placeholder="Detail the materials used, equipment deployed, contractor or squad crew, and quality inspection results..."></textarea>
+              <div class="form-text small">This information is audited by municipal administration and visible to the reporting citizen.</div>
+            </div>
+
+            <div class="mb-4">
+              <label for="image_after" class="form-label fw-semibold small">Resolution Proof Photo (After Repair)</label>
+              <input type="file" class="form-control" id="image_after" name="image_after" accept="image/*">
+              <div class="form-text small">Upload clear photographic evidence verifying completed restoration (PNG, JPG, JPEG, WEBP).</div>
+            </div>
+
+            <div class="p-3 bg-warning bg-opacity-10 rounded border border-warning mb-4 small text-dark">
+              <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
+              Submitting this form marks the ticket as <strong>Resolved</strong>, calculates final turnaround SLA metrics, and prompts the citizen for satisfaction rating.
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <a href="{{ url_for('officer.dashboard') }}" class="btn btn-civic-outline">Cancel</a>
+              <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm">
+                <i class="bi bi-check-circle-fill me-1"></i> Verify & Mark as Resolved
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

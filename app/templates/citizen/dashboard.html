@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% from 'components/status_badge.html' import render_status_badge, render_priority_badge %}
+
+{% block title %}Citizen Dashboard — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Welcome Bar -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-1">Hello, {{ current_user.full_name }}</h3>
+      <p class="text-muted small mb-0">Welcome to your citizen portal. Track the issues you reported and rate municipal repairs.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('citizen.report_issue') }}" class="btn btn-civic-teal shadow-sm">
+        <i class="bi bi-plus-circle-fill me-1"></i> Report New Problem
+      </a>
+      <a href="{{ url_for('main.explore') }}" class="btn btn-civic-outline">
+        <i class="bi bi-map me-1"></i> Public Map
+      </a>
+    </div>
+  </div>
+
+  <!-- Citizen KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-info">
+        <div class="kpi-title">My Total Reports</div>
+        <div class="kpi-value">{{ total_count }}</div>
+        <div class="kpi-subtext">Community contributions</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-success">
+        <div class="kpi-title">Resolved & Fixed</div>
+        <div class="kpi-value text-success">{{ resolved_count }}</div>
+        <div class="kpi-subtext">Verified resolutions</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-warning">
+        <div class="kpi-title">In Progress</div>
+        <div class="kpi-value text-teal" style="color: var(--cp-teal);">{{ in_progress_count }}</div>
+        <div class="kpi-subtext">Squads on site</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-title">Under Review</div>
+        <div class="kpi-value text-muted">{{ pending_count }}</div>
+        <div class="kpi-subtext">Queued for triage</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Issues List -->
+  <div class="card card-civic shadow-sm">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold text-navy mb-0"><i class="bi bi-clock-history text-teal me-2"></i>My Recent Civic Reports</h5>
+      <a href="{{ url_for('citizen.my_reports') }}" class="btn btn-sm btn-civic-outline">View All ({{ total_count }})</a>
+    </div>
+
+    <div class="card-body p-0">
+      {% if issues %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+              <tr>
+                <th class="ps-4">Tracking ID</th>
+                <th>Issue Details</th>
+                <th>Department</th>
+                <th>Reported On</th>
+                <th>Status</th>
+                <th class="text-end pe-4">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in issues %}
+                <tr>
+                  <td class="ps-4 font-monospace fw-bold text-navy">
+                    <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="text-decoration-none">
+                      {{ issue.tracking_id }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-navy">{{ issue.title }}</div>
+                    <div class="text-muted small">
+                      <i class="bi bi-geo-alt me-1"></i>{{ issue.address }} &bull;
+                      <span class="badge bg-light text-dark border">{{ issue.category.name if issue.category else 'General' }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="small fw-semibold text-muted">
+                      <i class="bi bi-building me-1 text-teal"></i>{{ issue.department.name if issue.department else 'Pending' }}
+                    </span>
+                  </td>
+                  <td class="small text-muted">{{ issue.created_at|date_format }}</td>
+                  <td>{{ render_status_badge(issue.status) }}</td>
+                  <td class="text-end pe-4">
+                    <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="btn btn-sm btn-civic-teal py-1 px-3">
+                      View Timeline
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-pin-map display-4 text-muted mb-3 d-block"></i>
+          <h5 class="fw-bold text-navy">You have not reported any issues yet</h5>
+          <p class="text-muted small mb-4">Spot a pothole, broken streetlight, or garbage heap? Report it to notify municipal squads.</p>
+          <a href="{{ url_for('citizen.report_issue') }}" class="btn btn-civic-teal">
+            <i class="bi bi-plus-circle me-1"></i> Submit Your First Civic Report
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

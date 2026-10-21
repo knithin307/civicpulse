@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% from 'components/status_badge.html' import render_status_badge, render_priority_badge %}
+
+{% block title %}Field Officer Operations — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+  <!-- Officer Header Bar -->
+  <div class="card card-civic mb-4 shadow-sm">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="rounded-3 p-3 text-white" style="background-color: var(--cp-navy);">
+          <i class="bi {{ department.icon if department else 'bi-briefcase' }} fs-3 text-teal" style="color: var(--cp-teal-light);"></i>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <h4 class="fw-bold text-navy mb-0">{{ department.name if department else 'Municipal Field Operations' }}</h4>
+            <span class="badge bg-warning text-dark font-monospace">{{ department.code if department else 'ALL' }}</span>
+          </div>
+          <p class="text-muted small mb-0">
+            Field Officer: <strong>{{ current_user.full_name }}</strong> &bull; {{ current_user.email }}
+          </p>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <a href="{{ url_for('main.explore', department_id=department.id if department else '') }}" class="btn btn-civic-outline btn-sm">
+          <i class="bi bi-map me-1"></i> Department Map View
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operational KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-info">
+        <div class="kpi-title">Assigned Tickets</div>
+        <div class="kpi-value">{{ total_count }}</div>
+        <div class="kpi-subtext">Department queue</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card kpi-warning">
+        <div class="kpi-title">Pending Triage</div>
+        <div class="kpi-value text-warning">{{ submitted_count }}</div>
+        <div class="kpi-subtext">Awaiting acknowledgement</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card">
+        <div class="kpi-title">In Progress / Field Squad</div>
+        <div class="kpi-value text-teal" style="color: var(--cp-teal);">{{ in_progress_count }}</div>
+        <div class="kpi-subtext">Active repair work</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card {{ 'kpi-danger' if breached_count > 0 else 'kpi-success' }}">
+        <div class="kpi-title">SLA Overdue Alert</div>
+        <div class="kpi-value {{ 'text-danger' if breached_count > 0 else 'text-success' }}">{{ breached_count }}</div>
+        <div class="kpi-subtext">{{ 'Attention required' if breached_count > 0 else 'All within SLA' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Queue Table -->
+  <div class="card card-civic shadow-sm">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <h5 class="fw-bold text-navy mb-0">Department Dispatch Queue ({{ issues|length }})</h5>
+
+      <!-- Quick Status Filter -->
+      <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('officer.dashboard') }}" class="btn btn-sm {{ 'btn-civic-navy' if not selected_status else 'btn-outline-secondary' }}">
+          All
+        </a>
+        <a href="{{ url_for('officer.dashboard', status='submitted') }}" class="btn btn-sm {{ 'btn-civic-navy' if selected_status == 'submitted' else 'btn-outline-secondary' }}">
+          Submitted
+        </a>
+        <a href="{{ url_for('officer.dashboard', status='in_progress') }}" class="btn btn-sm {{ 'btn-civic-navy' if selected_status == 'in_progress' else 'btn-outline-secondary' }}">
+          In Progress
+        </a>
+        <a href="{{ url_for('officer.dashboard', status='resolved') }}" class="btn btn-sm {{ 'btn-civic-navy' if selected_status == 'resolved' else 'btn-outline-secondary' }}">
+          Resolved
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      {% if issues %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+              <tr>
+                <th class="ps-4">Ticket</th>
+                <th>Category & Priority</th>
+                <th>Problem Description & Address</th>
+                <th>SLA Deadline</th>
+                <th>Status</th>
+                <th class="text-end pe-4">Operational Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in issues %}
+                <tr class="{{ 'table-danger' if issue.is_sla_breached and issue.status != 'resolved' else '' }}">
+                  <td class="ps-4 font-monospace fw-bold text-navy">
+                    <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="text-decoration-none">
+                      {{ issue.tracking_id }}
+                    </a>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-navy">{{ issue.category.name if issue.category else 'General' }}</div>
+                    <div>{{ render_priority_badge(issue.priority) }}</div>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-navy" style="max-width: 320px;">{{ issue.title }}</div>
+                    <div class="text-muted small">
+                      <i class="bi bi-geo-alt me-1 text-danger"></i> {{ issue.address }}
+                    </div>
+                  </td>
+                  <td class="small">
+                    <span class="{{ 'text-danger fw-bold' if issue.is_sla_breached and issue.status != 'resolved' else 'text-muted' }}">
+                      {{ issue.sla_deadline|datetime_format }}
+                    </span>
+                    {% if issue.is_sla_breached and issue.status != 'resolved' %}
+                      <span class="badge bg-danger ms-1">Breached</span>
+                    {% endif %}
+                  </td>
+                  <td>{{ render_status_badge(issue.status) }}</td>
+                  <td class="text-end pe-4">
+                    <div class="d-flex justify-content-end align-items-center gap-1">
+                      {% if issue.status != 'resolved' %}
+                        <!-- Status Update Dropdown Button -->
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                          Update Status
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                          {% if issue.status == 'submitted' %}
+                            <li>
+                              <form method="POST" action="{{ url_for('officer.update_status', issue_id=issue.id) }}">
+                                <input type="hidden" name="status" value="under_review">
+                                <input type="hidden" name="remarks" value="Acknowledged by field operations squad. Preliminary assessment scheduled.">
+                                <button type="submit" class="dropdown-item text-primary">
+                                  <i class="bi bi-search me-2"></i>Acknowledge & Under Review
+                                </button>
+                              </form>
+                            </li>
+                          {% endif %}
+                          {% if issue.status != 'in_progress' %}
+                            <li>
+                              <form method="POST" action="{{ url_for('officer.update_status', issue_id=issue.id) }}">
+                                <input type="hidden" name="status" value="in_progress">
+                                <input type="hidden" name="remarks" value="Field crew dispatched on-site with maintenance equipment.">
+                                <button type="submit" class="dropdown-item text-teal" style="color: var(--cp-teal);">
+                                  <i class="bi bi-gear-wide-connected me-2"></i>Dispatch Crew (In Progress)
+                                </button>
+                              </form>
+                            </li>
+                          {% endif %}
+                          <li>
+                            <form method="POST" action="{{ url_for('officer.update_status', issue_id=issue.id) }}">
+                              <input type="hidden" name="status" value="rejected">
+                              <input type="hidden" name="remarks" value="Issue inspection indicates out of municipal jurisdiction or duplicate report.">
+                              <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-x-circle me-2"></i>Reject Issue
+                              </button>
+                            </form>
+                          </li>
+                        </ul>
+
+                        <!-- Resolve Button with Evidence Upload -->
+                        <a href="{{ url_for('officer.resolve_issue', issue_id=issue.id) }}" class="btn btn-sm btn-success text-white">
+                          <i class="bi bi-patch-check-fill me-1"></i> Resolve Proof
+                        </a>
+                      {% else %}
+                        <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="btn btn-sm btn-civic-outline">
+                          View Proof &rarr;
+                        </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-check2-circle display-4 text-success mb-3 d-block"></i>
+          <h5 class="fw-bold text-navy">No tickets currently pending in this queue</h5>
+          <p class="text-muted small">All assigned municipal problems have been processed.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

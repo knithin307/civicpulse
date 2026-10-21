@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Report Civic Issue — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+      <div class="card card-civic shadow-sm">
+        <div class="card-header bg-white p-4 border-bottom">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-3 p-3 text-white" style="background-color: var(--cp-navy);">
+              <i class="bi bi-megaphone-fill fs-3 text-teal" style="color: var(--cp-teal-light);"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold text-navy mb-1">Report a Civic Hazard or Maintenance Issue</h4>
+              <p class="text-muted small mb-0">Provide location coordinates, photo proof, and description to alert the relevant municipal team.</p>
+            </div>
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('citizen.report_issue') }}" enctype="multipart/form-data" class="p-4">
+          <div class="row g-3 mb-3">
+            <div class="col-md-8">
+              <label for="title" class="form-label fw-semibold small">Issue Title <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="title" name="title" required placeholder="e.g. Deep Pothole on 5th Cross Road">
+            </div>
+
+            <div class="col-md-4">
+              <label for="priority" class="form-label fw-semibold small">Severity / Urgency</label>
+              <select class="form-select" id="priority" name="priority">
+                <option value="low">Low (Cosmetic/Minor)</option>
+                <option value="medium" selected>Medium (Standard)</option>
+                <option value="high">High (Traffic/Sanitation Risk)</option>
+                <option value="critical">Critical (Immediate Danger)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="category_id" class="form-label fw-semibold small">Problem Category <span class="text-danger">*</span></label>
+              <select class="form-select" id="category_id" name="category_id" required>
+                <option value="" disabled selected>-- Select Municipal Category --</option>
+                {% for cat in categories %}
+                  <option value="{{ cat.id }}">
+                    {{ cat.name }} ({{ cat.department.name if cat.department else '' }}) &bull; SLA: {{ cat.sla_hours }}h
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label for="image" class="form-label fw-semibold small">Hazard Photo Proof (Optional)</label>
+              <input type="file" class="form-control" id="image" name="image" accept="image/*">
+              <div class="form-text" style="font-size:0.75rem;">Supported: PNG, JPG, JPEG, WEBP. Max 16MB.</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="description" class="form-label fw-semibold small">Detailed Description <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="description" name="description" rows="3" required placeholder="Describe the severity, duration, and safety hazards..."></textarea>
+          </div>
+
+          <hr class="my-4">
+
+          <!-- Geospatial Location Picker Section -->
+          <div class="mb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-2">
+              <div>
+                <label class="form-label fw-semibold small mb-0 text-navy">
+                  <i class="bi bi-geo-alt-fill text-danger me-1"></i> Pinpoint Location on Interactive Map <span class="text-danger">*</span>
+                </label>
+                <div class="text-muted small">Click on the map or drag the pin to set the exact coordinates of the issue.</div>
+              </div>
+              <button type="button" class="btn btn-sm btn-civic-outline" id="btn-detect-location">
+                <i class="bi bi-crosshair me-1"></i> Detect My Current Location
+              </button>
+            </div>
+
+            <!-- Leaflet Map Canvas -->
+            <div id="map-picker" class="mb-2"></div>
+            
+            <div class="d-flex justify-content-between align-items-center small text-muted">
+              <span id="coords-display" class="font-monospace fw-semibold">Coordinates: 12.9716, 77.5946</span>
+              <span><i class="bi bi-info-circle me-1"></i>OpenStreetMap Geo-tagging</span>
+            </div>
+
+            <!-- Hidden Inputs for Coordinates -->
+            <input type="hidden" id="latitude" name="latitude" value="12.9716">
+            <input type="hidden" id="longitude" name="longitude" value="77.5946">
+          </div>
+
+          <div class="mb-4">
+            <label for="address" class="form-label fw-semibold small">Street Address / Landmark <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-signpost"></i></span>
+              <input type="text" class="form-control" id="address" name="address" required placeholder="e.g. Near Community Center, 8th Main, Ward 14">
+            </div>
+          </div>
+
+          <div class="mb-4 form-check">
+            <input type="checkbox" class="form-check-input" id="is_public" name="is_public" value="1" checked>
+            <label class="form-check-label small text-muted" for="is_public">
+              Make this issue publicly visible on the city map and public tracker (allows community upvoting)
+            </label>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <a href="{{ url_for('citizen.dashboard') }}" class="btn btn-civic-outline">Cancel</a>
+            <button type="submit" class="btn btn-civic-teal btn-lg px-4 shadow-sm">
+              <i class="bi bi-send-fill me-1"></i> Submit Civic Report
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/map_picker.js') }}"></script>
+{% endblock %}

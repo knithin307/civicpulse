@@ -1,0 +1,65 @@
+<footer class="footer-civic mt-auto">
+  <div class="container py-4">
+    <div class="row g-4">
+      <div class="col-lg-4 col-md-6">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="brand-dot"></span>
+          <span class="text-white fw-bold fs-5">Civic<strong style="color: var(--cp-teal-light);">Pulse</strong></span>
+        </div>
+        <p class="small text-muted mb-3">
+          Next-generation smart city infrastructure issue reporting & verified resolution platform. Empowering citizen participation to build safer, more inclusive, and resilient communities.
+        </p>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-warning text-dark fw-bold">UN SDG 11</span>
+          <span class="small text-muted">Sustainable Cities & Communities</span>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-6 col-6">
+        <h6 class="text-white fw-bold mb-3">Platform</h6>
+        <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+          <li><a href="{{ url_for('main.index') }}">Home</a></li>
+          <li><a href="{{ url_for('main.explore') }}">Interactive Map</a></li>
+          <li><a href="{{ url_for('main.track') }}">Track by ID</a></li>
+          <li><a href="{{ url_for('citizen.report_issue') }}">Report a Problem</a></li>
+          <li><a href="{{ url_for('main.sdg11') }}">SDG 11 Metrics</a></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-3 col-md-6 col-6">
+        <h6 class="text-white fw-bold mb-3">Departments</h6>
+        <ul class="list-unstyled small d-flex flex-column gap-2 mb-0 text-muted">
+          <li><i class="bi bi-cone-striped me-1 text-teal"></i> Roads & Infrastructure</li>
+          <li><i class="bi bi-trash3 me-1 text-teal"></i> Solid Waste Management</li>
+          <li><i class="bi bi-lightbulb me-1 text-teal"></i> Electrical & Public Lighting</li>
+          <li><i class="bi bi-droplet-half me-1 text-teal"></i> Water Supply & Sewerage</li>
+          <li><i class="bi bi-tree me-1 text-teal"></i> Environment & Public Health</li>
+        </ul>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <h6 class="text-white fw-bold mb-3">Municipal Helpline</h6>
+        <div class="small text-muted mb-2">
+          <i class="bi bi-telephone-fill me-2 text-teal"></i> Toll-Free: <strong>1800-CITY-FIX</strong>
+        </div>
+        <div class="small text-muted mb-2">
+          <i class="bi bi-envelope-fill me-2 text-teal"></i> support@civicpulse.org
+        </div>
+        <div class="small text-muted mb-3">
+          <i class="bi bi-geo-alt-fill me-2 text-teal"></i> Municipal Corporation City Hall
+        </div>
+        <div class="p-2 rounded bg-dark border border-secondary small text-muted">
+          <i class="bi bi-shield-check text-success me-1"></i> Transparent Public SLA Auditing
+        </div>
+      </div>
+    </div>
+
+    <div class="border-top border-secondary mt-4 pt-3 d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted">
+      <div>&copy; 2026 CivicPulse Smart City Platform. All rights reserved.</div>
+      <div class="mt-2 mt-md-0">
+        <span class="me-3">Aligned with United Nations 2030 Agenda</span>
+        <a href="#top" class="text-teal text-decoration-none"><i class="bi bi-arrow-up-circle"></i> Back to Top</a>
+      </div>
+    </div>
+  </div>
+</footer>

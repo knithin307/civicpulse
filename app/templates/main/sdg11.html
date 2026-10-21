@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}UN SDG 11: Sustainable Cities & Communities — CivicPulse{% endblock %}
+
+{% block content %}
+<!-- SDG 11 Header -->
+<div class="py-5" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #ffffff;">
+  <div class="container">
+    <div class="d-inline-flex align-items-center gap-2 bg-white text-dark px-3 py-1 rounded-pill fw-bold mb-3 shadow-sm">
+      <i class="bi bi-globe-americas text-warning"></i> United Nations 2030 Agenda
+    </div>
+    <h1 class="display-4 fw-bold">SDG 11: Sustainable Cities & Communities</h1>
+    <p class="lead" style="max-width: 750px;">
+      "Make cities and human settlements inclusive, safe, resilient, and sustainable." CivicPulse provides the participatory data feedback loop that powers responsive municipal governance.
+    </p>
+  </div>
+</div>
+
+<div class="container py-5">
+  <!-- Dynamic Livability Score Banner -->
+  <div class="card card-civic mb-5 shadow-sm overflow-hidden border-warning">
+    <div class="card-body p-4 p-md-5">
+      <div class="row align-items-center g-4">
+        <div class="col-md-7">
+          <span class="badge bg-warning text-dark fw-bold mb-2">Real-Time Data Metric</span>
+          <h3 class="fw-bold text-navy">Municipal Livability Index: {{ stats.livability_score }}/100</h3>
+          <p class="text-muted">
+            This index is dynamically computed from active database metrics: issue resolution rate ({{ stats.resolution_rate }}%), departmental SLA compliance ({{ stats.sla_compliance_rate }}%), and verified citizen satisfaction ratings ({{ stats.avg_citizen_rating }}/5.0).
+          </p>
+          <div class="progress" style="height: 12px;">
+            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ stats.livability_score }}%;" aria-valuenow="{{ stats.livability_score }}" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <div class="row g-2 text-center">
+            <div class="col-6">
+              <div class="p-3 bg-light rounded border">
+                <div class="fs-4 fw-bold text-navy">{{ stats.total_issues }}</div>
+                <div class="text-muted small">Total Civic Hazards Reported</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-light rounded border">
+                <div class="fs-4 fw-bold text-success">{{ stats.resolved_issues }}</div>
+                <div class="text-muted small">Resolved & Restored</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-light rounded border">
+                <div class="fs-4 fw-bold text-teal">{{ stats.avg_resolution_hours }}h</div>
+                <div class="text-muted small">Average Response Time</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 bg-light rounded border">
+                <div class="fs-4 fw-bold text-warning">{{ stats.avg_citizen_rating }} <i class="bi bi-star-fill" style="font-size:0.9rem;"></i></div>
+                <div class="text-muted small">Citizen Review Score</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SDG 11 Targets Breakdown -->
+  <div class="text-center mb-5">
+    <h2 class="fw-bold text-navy">How CivicPulse Drives SDG 11 Targets</h2>
+    <p class="text-muted mx-auto" style="max-width: 650px;">
+      Civic technology transforms passive city dwellers into active co-custodians of urban public goods.
+    </p>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <div class="card card-civic h-100 p-4 border-start border-4 border-warning shadow-sm">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-warning text-dark fs-6">Target 11.1</span>
+          <h5 class="fw-bold text-navy mb-0">Safe & Resilient Basic Urban Services</h5>
+        </div>
+        <p class="text-muted small mb-3">
+          By 2030, ensure access for all to adequate, safe, and affordable housing and basic services, including reliable water supply and road infrastructure.
+        </p>
+        <ul class="text-muted small ps-3 mb-0">
+          <li class="mb-2"><strong>Roads & Infrastructure:</strong> Pothole detection prevents traffic collisions and pedestrian injuries.</li>
+          <li class="mb-2"><strong>Water Supply:</strong> Rapid reporting of pipeline bursts curtails clean water wastage and prevents localized flooding.</li>
+          <li><strong>Electrical Lighting:</strong> Restoring broken streetlights enhances safety for women and commuters at night.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card card-civic h-100 p-4 border-start border-4 border-success shadow-sm">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <span class="badge bg-success fs-6">Target 11.6</span>
+          <h5 class="fw-bold text-navy mb-0">Environmental Impact & Municipal Waste</h5>
+        </div>
+        <p class="text-muted small mb-3">
+          By 2030, reduce the adverse per capita environmental impact of cities, including by paying special attention to air quality and municipal waste management.
+        </p>
+        <ul class="text-muted small ps-3 mb-0">
+          <li class="mb-2"><strong>Solid Waste Management:</strong> Elimination of overflowing waste dump spots stops leachate from contaminating soil and water tables.</li>
+          <li class="mb-2"><strong>Vector Control:</strong> Eradication of stagnant water bodies directly suppresses dengue and malaria outbreaks.</li>
+          <li><strong>Clean Stormwater Channels:</strong> Unclogging drains stops urban street runoff blockages during monsoon rainfalls.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-navy text-white p-4 p-md-5 rounded-4 shadow-lg text-center" style="background-color: var(--cp-navy);">
+    <h3 class="fw-bold text-white mb-2">Be Part of Your City's Sustainable Future</h3>
+    <p class="text-light opacity-90 mx-auto mb-4" style="max-width: 600px;">
+      Empower municipal workers with precise location data and verified photo evidence. Every report you submit helps build a safer, cleaner city.
+    </p>
+    <div>
+      <a href="{{ url_for('citizen.report_issue') }}" class="btn btn-civic-teal btn-lg px-4 shadow">
+        <i class="bi bi-plus-circle me-1"></i> Submit a Civic Report
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}User & Role Administration — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <h3 class="fw-bold text-navy mb-1"><i class="bi bi-people-fill text-teal me-2" style="color: var(--cp-teal);"></i>User & Role Administration (RBAC)</h3>
+      <p class="text-muted small mb-0">Manage platform permissions, promote field officers, and assign department jurisdiction.</p>
+    </div>
+  </div>
+
+  <div class="card card-civic shadow-sm">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+      <h6 class="fw-bold text-navy mb-0">Registered Users Directory ({{ users|length }})</h6>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase text-muted">
+            <tr>
+              <th class="ps-4">User</th>
+              <th>Contact Phone</th>
+              <th>Role</th>
+              <th>Department Jurisdiction</th>
+              <th>Joined Date</th>
+              <th class="text-end pe-4">Manage Permissions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+              <tr>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center fw-bold" style="width:34px; height:34px; background-color: var(--cp-navy); font-size: 0.8rem;">
+                      {{ u.full_name[:1].upper() }}
+                    </div>
+                    <div>
+                      <div class="fw-bold text-navy">{{ u.full_name }}</div>
+                      <div class="text-muted small">{{ u.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="small text-muted">{{ u.phone or '—' }}</td>
+                <td>
+                  {% if u.role == 'admin' %}
+                    <span class="badge bg-danger"><i class="bi bi-shield-lock-fill me-1"></i>ADMIN</span>
+                  {% elif u.role == 'officer' %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-briefcase-fill me-1"></i>OFFICER</span>
+                  {% else %}
+                    <span class="badge bg-secondary"><i class="bi bi-person me-1"></i>CITIZEN</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if u.department %}
+                    <span class="badge bg-light text-navy border"><i class="bi {{ u.department.icon }} me-1"></i>{{ u.department.name }}</span>
+                  {% else %}
+                    <span class="text-muted small">None</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ u.created_at|date_format }}</td>
+                <td class="text-end pe-4">
+                  <button type="button" class="btn btn-sm btn-civic-outline py-1 px-2" data-bs-toggle="modal" data-bs-target="#userRoleModal{{ u.id }}" style="font-size:0.75rem;">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Role
+                  </button>
+
+                  <!-- Edit Role Modal -->
+                  <div class="modal fade text-start" id="userRoleModal{{ u.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <form method="POST" action="{{ url_for('admin.users') }}">
+                          <input type="hidden" name="user_id" value="{{ u.id }}">
+                          <div class="modal-header">
+                            <h5 class="modal-title fw-bold">Update Role for {{ u.full_name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="mb-3">
+                              <label class="form-label small fw-semibold">User Role</label>
+                              <select class="form-select" name="role" required>
+                                <option value="citizen" {{ 'selected' if u.role == 'citizen' else '' }}>Citizen (Report & Track)</option>
+                                <option value="officer" {{ 'selected' if u.role == 'officer' else '' }}>Department Officer (Resolve Tickets)</option>
+                                <option value="admin" {{ 'selected' if u.role == 'admin' else '' }}>Administrator (System-wide Authority)</option>
+                              </select>
+                            </div>
+
+                            <div class="mb-3">
+                              <label class="form-label small fw-semibold">Department Jurisdiction (Required if Officer)</label>
+                              <select class="form-select" name="department_id">
+                                <option value="">-- No Department Assigned --</option>
+                                {% for d in departments %}
+                                  <option value="{{ d.id }}" {{ 'selected' if u.department_id == d.id else '' }}>
+                                    {{ d.name }} ({{ d.code }})
+                                  </option>
+                                {% endfor %}
+                              </select>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-civic-teal btn-sm">Save Permissions</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

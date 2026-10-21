@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Register Citizen Account — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-auto">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card card-civic shadow-lg p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-teal text-white mb-2" style="width:50px; height:50px; background-color: var(--cp-teal);">
+            <i class="bi bi-person-plus fs-4"></i>
+          </div>
+          <h3 class="fw-bold text-navy">Join CivicPulse</h3>
+          <p class="text-muted small">Register to report civic hazards, track resolutions, and rate municipal repairs</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+          <div class="mb-3">
+            <label for="full_name" class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+              <input type="text" class="form-control" id="full_name" name="full_name" required placeholder="Elena Vance">
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-7">
+              <label for="email" class="form-label fw-semibold small">Email Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control" id="email" name="email" required placeholder="you@example.com">
+              </div>
+            </div>
+            <div class="col-md-5">
+              <label for="phone" class="form-label fw-semibold small">Phone (Optional)</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="+1 555-0123">
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label for="password" class="form-label fw-semibold small">Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                <input type="password" class="form-control" id="password" name="password" required minlength="6" placeholder="Min. 6 chars">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="confirm_password" class="form-label fw-semibold small">Confirm Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-light"><i class="bi bi-check2-circle"></i></span>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required minlength="6" placeholder="Re-enter">
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 rounded bg-light mb-4 small text-muted border">
+            <i class="bi bi-info-circle text-teal me-1"></i>
+            By creating an account, you contribute to open civic governance aligned with <strong>UN SDG 11: Sustainable Cities</strong>.
+          </div>
+
+          <button type="submit" class="btn btn-civic-teal w-100 py-2 fw-semibold">
+            <i class="bi bi-arrow-right-circle me-1"></i> Register as Citizen
+          </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top">
+          <span class="text-muted small">Already registered?</span>
+          <a href="{{ url_for('auth.login') }}" class="small fw-bold ms-1" style="color: var(--cp-teal);">Sign In Here</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

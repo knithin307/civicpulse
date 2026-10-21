@@ -1,0 +1,27 @@
+{% macro render_status_badge(status) %}
+  {% if status == 'submitted' %}
+    <span class="badge badge-status badge-status-submitted"><i class="bi bi-clock me-1"></i>Submitted</span>
+  {% elif status == 'under_review' %}
+    <span class="badge badge-status badge-status-under_review"><i class="bi bi-search me-1"></i>Under Review</span>
+  {% elif status == 'in_progress' %}
+    <span class="badge badge-status badge-status-in_progress"><i class="bi bi-gear-wide-connected me-1"></i>In Progress</span>
+  {% elif status == 'resolved' %}
+    <span class="badge badge-status badge-status-resolved"><i class="bi bi-check-circle-fill me-1"></i>Resolved</span>
+  {% elif status == 'rejected' %}
+    <span class="badge badge-status badge-status-rejected"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>
+  {% else %}
+    <span class="badge bg-secondary">{{ status }}</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_priority_badge(priority) %}
+  {% if priority == 'critical' %}
+    <span class="badge bg-danger text-white"><i class="bi bi-exclamation-octagon-fill me-1"></i>Critical</span>
+  {% elif priority == 'high' %}
+    <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill me-1"></i>High</span>
+  {% elif priority == 'medium' %}
+    <span class="badge bg-info text-dark"><i class="bi bi-info-circle-fill me-1"></i>Medium</span>
+  {% else %}
+    <span class="badge bg-light text-dark border">Low</span>
+  {% endif %}
+{% endmacro %}

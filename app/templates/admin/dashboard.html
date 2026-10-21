@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% from 'components/status_badge.html' import render_status_badge, render_priority_badge %}
+
+{% block title %}City Administration Command Center — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-4">
+  <!-- Command Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h3 class="fw-bold text-navy mb-0">Executive Command Center</h3>
+        <span class="badge bg-danger">ADMINISTRATOR</span>
+      </div>
+      <p class="text-muted small mb-0">City-wide infrastructure triage, SLA governance, and departmental analytics.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('admin.export_csv') }}" class="btn btn-civic-outline btn-sm shadow-sm">
+        <i class="bi bi-download me-1"></i> Export CSV Audit
+      </a>
+      <a href="{{ url_for('admin.analytics') }}" class="btn btn-civic-teal btn-sm shadow-sm">
+        <i class="bi bi-graph-up me-1"></i> Full Analytics
+      </a>
+    </div>
+  </div>
+
+  <!-- Real-Time Database KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2">
+      <div class="kpi-card kpi-info">
+        <div class="kpi-title">Total Reports</div>
+        <div class="kpi-value">{{ stats.total_issues }}</div>
+        <div class="kpi-subtext">All time logged</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="kpi-card kpi-success">
+        <div class="kpi-title">Resolution Rate</div>
+        <div class="kpi-value text-success">{{ stats.resolution_rate }}%</div>
+        <div class="kpi-subtext">{{ stats.resolved_issues }} resolved</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="kpi-card kpi-warning">
+        <div class="kpi-title">SLA Compliance</div>
+        <div class="kpi-value text-warning">{{ stats.sla_compliance_rate }}%</div>
+        <div class="kpi-subtext">Within target SLA</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="kpi-card">
+        <div class="kpi-title">Avg Response</div>
+        <div class="kpi-value text-teal" style="color: var(--cp-teal);">{{ stats.avg_resolution_hours }}h</div>
+        <div class="kpi-subtext">Hours to resolve</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="kpi-card">
+        <div class="kpi-title">Citizen Rating</div>
+        <div class="kpi-value" style="color: #f59e0b;">{{ stats.avg_citizen_rating }} <i class="bi bi-star-fill fs-5"></i></div>
+        <div class="kpi-subtext">{{ stats.feedback_count }} reviews</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="kpi-card kpi-success">
+        <div class="kpi-title">SDG 11 Index</div>
+        <div class="kpi-value text-navy">{{ stats.livability_score }}</div>
+        <div class="kpi-subtext">Urban score / 100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Unassigned Issues Alert Box (if any) -->
+  {% if unassigned_issues %}
+    <div class="alert alert-warning border-warning shadow-sm mb-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+          <div>
+            <strong>{{ unassigned_issues|length }} Unassigned Issue(s) Require Department Routing</strong>
+            <div class="small text-muted">Newly logged citizen reports without assigned municipal departments.</div>
+          </div>
+        </div>
+        <a href="{{ url_for('admin.issues', status='submitted') }}" class="btn btn-sm btn-dark">Review & Assign</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Chart.js Visualizations Row -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-5">
+      <div class="card card-civic h-100 shadow-sm">
+        <div class="card-header-civic d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-navy"><i class="bi bi-pie-chart text-teal me-2"></i>Issues by Category</span>
+          <span class="badge bg-light text-muted border">Live Database</span>
+        </div>
+        <div class="card-body p-3" style="position: relative; height: 280px;">
+          <canvas id="categoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card card-civic h-100 shadow-sm">
+        <div class="card-header-civic d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-navy"><i class="bi bi-graph-up text-teal me-2"></i>Resolution Velocity (Created vs Resolved)</span>
+          <span class="badge bg-light text-muted border">6-Month Trend</span>
+        </div>
+        <div class="card-body p-3" style="position: relative; height: 280px;">
+          <canvas id="monthlyTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Department SLA & Performance Table -->
+  <div class="card card-civic mb-4 shadow-sm">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold text-navy mb-0"><i class="bi bi-building-check text-teal me-2"></i>Municipal Department Performance & SLA Adherence</h5>
+      <a href="{{ url_for('admin.departments') }}" class="btn btn-sm btn-civic-outline">Manage Departments</a>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase text-muted">
+            <tr>
+              <th class="ps-4">Department</th>
+              <th>Code</th>
+              <th>Total Assigned</th>
+              <th>Pending / Review</th>
+              <th>In Progress</th>
+              <th>Resolved</th>
+              <th>Resolution Rate</th>
+              <th class="pe-4 text-end">Avg Response</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in dept_performance %}
+              <tr>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi {{ d.icon }} text-teal fs-5" style="color: var(--cp-teal);"></i>
+                    <span class="fw-bold text-navy">{{ d.name }}</span>
+                  </div>
+                </td>
+                <td><span class="badge bg-light text-navy border font-monospace">{{ d.code }}</span></td>
+                <td class="fw-semibold">{{ d.total_issues }}</td>
+                <td><span class="badge bg-warning text-dark">{{ d.pending_issues }}</span></td>
+                <td><span class="badge bg-info text-dark">{{ d.in_progress_issues }}</span></td>
+                <td><span class="badge bg-success text-white">{{ d.resolved_issues }}</span></td>
+                <td>
+                  <div class="d-flex align-items-center gap-2" style="width: 140px;">
+                    <div class="progress flex-grow-1" style="height: 6px;">
+                      <div class="progress-bar bg-teal" role="progressbar" style="width: {{ d.resolution_rate }}%;"></div>
+                    </div>
+                    <span class="small fw-bold">{{ d.resolution_rate }}%</span>
+                  </div>
+                </td>
+                <td class="pe-4 text-end font-monospace fw-semibold">{{ d.avg_resolution_hours }}h</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Issues Activity Stream -->
+  <div class="card card-civic shadow-sm">
+    <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+      <h5 class="fw-bold text-navy mb-0"><i class="bi bi-activity text-teal me-2"></i>City-wide Issues Activity Stream</h5>
+      <a href="{{ url_for('admin.issues') }}" class="btn btn-sm btn-civic-outline">View All Issues</a>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase text-muted">
+            <tr>
+              <th class="ps-4">Tracking ID</th>
+              <th>Title & Address</th>
+              <th>Department</th>
+              <th>Status</th>
+              <th>Priority</th>
+              <th>Reported On</th>
+              <th class="text-end pe-4">Assignment Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for issue in recent_issues %}
+              <tr>
+                <td class="ps-4 font-monospace fw-bold text-navy">
+                  <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="text-decoration-none">
+                    {{ issue.tracking_id }}
+                  </a>
+                </td>
+                <td>
+                  <div class="fw-semibold text-navy">{{ issue.title }}</div>
+                  <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>{{ issue.address }}</div>
+                </td>
+                <td>
+                  {% if issue.department %}
+                    <span class="badge bg-light text-navy border"><i class="bi {{ issue.department.icon }} me-1"></i>{{ issue.department.name }}</span>
+                  {% else %}
+                    <span class="badge bg-danger">Unassigned</span>
+                  {% endif %}
+                </td>
+                <td>{{ render_status_badge(issue.status) }}</td>
+                <td>{{ render_priority_badge(issue.priority) }}</td>
+                <td class="small text-muted">{{ issue.created_at|date_format }}</td>
+                <td class="text-end pe-4">
+                  <!-- Reassign Department Modal Trigger -->
+                  <button type="button" class="btn btn-sm btn-civic-outline py-1 px-2" data-bs-toggle="modal" data-bs-target="#assignModal{{ issue.id }}" style="font-size:0.75rem;">
+                    <i class="bi bi-pencil-square me-1"></i> Assign
+                  </button>
+
+                  <!-- Modal -->
+                  <div class="modal fade text-start" id="assignModal{{ issue.id }}" tabindex="-1" aria-labelledby="assignModalLabel{{ issue.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <form method="POST" action="{{ url_for('admin.assign_issue', issue_id=issue.id) }}">
+                          <div class="modal-header">
+                            <h5 class="modal-title fw-bold" id="assignModalLabel{{ issue.id }}">Route Issue: {{ issue.tracking_id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="mb-3">
+                              <label class="form-label small fw-semibold">Issue Title</label>
+                              <div class="p-2 bg-light rounded small text-navy fw-semibold">{{ issue.title }}</div>
+                            </div>
+                            <div class="mb-3">
+                              <label for="deptSelect{{ issue.id }}" class="form-label small fw-semibold">Target Department</label>
+                              <select class="form-select" id="deptSelect{{ issue.id }}" name="department_id" required>
+                                {% for d in departments %}
+                                  <option value="{{ d.id }}" {{ 'selected' if issue.department_id == d.id else '' }}>
+                                    {{ d.name }} ({{ d.code }})
+                                  </option>
+                                {% endfor %}
+                              </select>
+                            </div>
+                            <div class="mb-3">
+                              <label for="remarks{{ issue.id }}" class="form-label small fw-semibold">Admin Dispatch Remarks</label>
+                              <textarea class="form-control" id="remarks{{ issue.id }}" name="remarks" rows="2" placeholder="e.g. Routed based on municipal jurisdiction and field inspection."></textarea>
+                            </div>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-civic-teal btn-sm">Confirm Routing</button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

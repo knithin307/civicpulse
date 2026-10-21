@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% from 'components/status_badge.html' import render_status_badge, render_priority_badge %}
+
+{% block title %}Track Civic Issue Status — CivicPulse{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Search Box Card -->
+      <div class="card card-civic p-4 shadow-sm mb-4 text-center">
+        <h3 class="fw-bold text-navy mb-2"><i class="bi bi-search text-teal me-2" style="color: var(--cp-teal);"></i>Track Public Issue Resolution</h3>
+        <p class="text-muted small mb-4">Enter your 10-character Tracking ID to view real-time department status, field crew notes, and resolution proofs.</p>
+
+        <form method="POST" action="{{ url_for('main.track') }}" class="d-flex justify-content-center gap-2 max-w-lg mx-auto">
+          <div class="input-group input-group-lg" style="max-width: 480px;">
+            <span class="input-group-text bg-white"><i class="bi bi-ticket-perforated text-muted"></i></span>
+            <input type="text" name="tracking_id" class="form-control text-uppercase fw-bold" placeholder="e.g. CP-2026-1042" value="{{ tracking_id or '' }}" required autofocus>
+            <button class="btn btn-civic-teal px-4" type="submit">Track Status</button>
+          </div>
+        </form>
+
+        <div class="mt-3 small text-muted">
+          <span>Try sample tracking IDs: </span>
+          <a href="{{ url_for('main.track', tracking_id='CP-2026-1042') }}" class="badge bg-light text-navy border text-decoration-none">CP-2026-1042</a>
+          <a href="{{ url_for('main.track', tracking_id='CP-2026-3490') }}" class="badge bg-light text-navy border text-decoration-none">CP-2026-3490</a>
+          <a href="{{ url_for('main.track', tracking_id='CP-2026-2108') }}" class="badge bg-light text-navy border text-decoration-none">CP-2026-2108</a>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      {% if issue %}
+        <div class="card card-civic shadow-sm overflow-hidden mb-4">
+          <div class="card-header bg-white p-3 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <span class="text-muted small text-uppercase fw-bold">Municipal Work Order</span>
+              <h4 class="fw-bold text-navy mb-0 font-monospace">{{ issue.tracking_id }}</h4>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              {{ render_status_badge(issue.status) }}
+              {{ render_priority_badge(issue.priority) }}
+            </div>
+          </div>
+
+          <div class="card-body p-4">
+            <h5 class="fw-bold text-navy mb-2">{{ issue.title }}</h5>
+            <p class="text-muted mb-3">{{ issue.description }}</p>
+
+            <div class="row g-3 p-3 bg-light rounded border mb-4 small">
+              <div class="col-sm-6">
+                <span class="text-muted d-block">Department In Charge</span>
+                <strong class="text-navy"><i class="bi bi-building me-1 text-teal"></i>{{ issue.department.name if issue.department else 'Pending Assignment' }}</strong>
+              </div>
+              <div class="col-sm-6">
+                <span class="text-muted d-block">Location Address</span>
+                <strong class="text-navy"><i class="bi bi-geo-alt me-1 text-danger"></i>{{ issue.address }}</strong>
+              </div>
+              <div class="col-sm-6">
+                <span class="text-muted d-block">Report Date</span>
+                <span>{{ issue.created_at|datetime_format }}</span>
+              </div>
+              <div class="col-sm-6">
+                <span class="text-muted d-block">SLA Target Deadline</span>
+                <span class="{{ 'text-danger fw-bold' if issue.is_sla_breached and not issue.is_resolved else '' }}">
+                  {{ issue.sla_deadline|datetime_format }}
+                  {% if issue.is_sla_breached and not issue.is_resolved %}
+                    (Overdue)
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+
+            <!-- Resolution Proof if Resolved -->
+            {% if issue.status == 'resolved' %}
+              <div class="card border-success bg-success bg-opacity-10 mb-4 p-3">
+                <div class="d-flex align-items-center gap-2 text-success fw-bold mb-2">
+                  <i class="bi bi-patch-check-fill fs-5"></i>
+                  <span>Official Resolution Proof Submitted & Verified</span>
+                </div>
+                <div class="text-dark small mb-3">
+                  <strong>Department Remarks:</strong> {{ issue.resolution_notes or 'Work completed satisfactorily.' }}
+                </div>
+
+                <div class="row g-2">
+                  {% if issue.image_before %}
+                    <div class="col-6">
+                      <div class="evidence-preview-card">
+                        <div class="evidence-label evidence-label-before">Before Repair</div>
+                        <img src="{{ url_for('static', filename=issue.image_before) }}" class="evidence-img" alt="Before">
+                      </div>
+                    </div>
+                  {% endif %}
+                  {% if issue.image_after %}
+                    <div class="col-6">
+                      <div class="evidence-preview-card">
+                        <div class="evidence-label evidence-label-after">After Repair</div>
+                        <img src="{{ url_for('static', filename=issue.image_after) }}" class="evidence-img" alt="After">
+                      </div>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Timeline Stepper -->
+            <h6 class="fw-bold text-navy mb-3"><i class="bi bi-clock-history text-teal me-2"></i>Action Audit Timeline</h6>
+            <div class="timeline-civic">
+              {% for step in issue.timeline %}
+                <div class="timeline-item {{ 'active' if loop.last else '' }}">
+                  <div class="timeline-indicator"></div>
+                  <div class="fw-bold text-navy" style="font-size: 0.95rem;">{{ step.action }}</div>
+                  <div class="timeline-time">{{ step.created_at|datetime_format }}</div>
+                  {% if step.remarks %}
+                    <div class="text-muted small mt-1 p-2 bg-light rounded border">
+                      {{ step.remarks }}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+              <a href="{{ url_for('citizen.issue_detail', issue_id=issue.id) }}" class="btn btn-civic-teal btn-sm">
+                Open Full Issue Page &rarr;
+              </a>
+              <span class="text-muted small"><i class="bi bi-hand-thumbs-up me-1"></i>{{ issue.upvotes_count }} community upvotes</span>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
