@@ -19,8 +19,18 @@ def create_app(config_name='development'):
         return User.query.get(int(user_id))
         
     # Ensure upload folders exist
-    os.makedirs(app.config.get('ISSUES_UPLOAD_FOLDER', os.path.join(app.root_path, 'static', 'uploads', 'issues')), exist_ok=True)
-    os.makedirs(app.config.get('RESOLUTIONS_UPLOAD_FOLDER', os.path.join(app.root_path, 'static', 'uploads', 'resolutions')), exist_ok=True)
+    try:
+        os.makedirs(app.config.get('ISSUES_UPLOAD_FOLDER', os.path.join(app.root_path, 'static', 'uploads', 'issues')), exist_ok=True)
+        os.makedirs(app.config.get('RESOLUTIONS_UPLOAD_FOLDER', os.path.join(app.root_path, 'static', 'uploads', 'resolutions')), exist_ok=True)
+    except OSError:
+        pass
+
+    # Dynamic static file serving for Vercel /tmp uploads
+    if app.config.get('IS_VERCEL'):
+        from flask import send_from_directory
+        @app.route('/static/uploads/<path:filename>')
+        def serve_vercel_uploads(filename):
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
     
     # Register Template Filters and Context Processors
     @app.context_processor
